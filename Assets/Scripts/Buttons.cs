@@ -15,6 +15,11 @@ public class Buttons : MonoBehaviour {
         Application.Quit();
     }
 
+    public void BackPressed()
+    {
+        SceneManager.LoadScene("MainMenu");
+    }
+
     public void SelectLevel(int number)
     {
         SceneManager.LoadScene(1+number);

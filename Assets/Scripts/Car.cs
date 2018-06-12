@@ -1,13 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using UnityEngine.UI;
 
 public class Car : MonoBehaviour {
 
 	[SerializeField]
 	bool IsPlayerControlled = false;
 
-	[SerializeField]
+    [SerializeField]
+    float turnDuration;
+
+    [SerializeField]
+    Button btnLeft;
+
+    [SerializeField]
+    Button btnRight;
+
+    [SerializeField]
+    Button btnUp;
+
+    [SerializeField]
+    Button btnDown;
+
+    [SerializeField]
 	[Range(0f, 1f)]
 	float CGHeight = 0.55f;
 
@@ -29,7 +45,12 @@ public class Car : MonoBehaviour {
 	[Range(0f, 1f)]
 	float MaxSteerAngle = 0.75f;
 
-	[SerializeField]
+    internal float getDuration()
+    {
+        return turnDuration;
+    }
+
+    [SerializeField]
 	[Range(0f, 20f)]
 	float CornerStiffnessFront = 5.0f;
 
@@ -104,6 +125,9 @@ public class Car : MonoBehaviour {
 	Vector2 LocalVelocity;
 	Vector2 LocalAcceleration;
 
+    Joystick joystick;
+    JoyButton joyButton;
+
 	float Throttle;
 	float Brake;
 	float EBrake;
@@ -112,8 +136,11 @@ public class Car : MonoBehaviour {
     int turnDirection;
 
     float time = 0;
-    float turnDuration;
 
+    bool turningLeft;
+    bool turningRight;
+    bool speedingUp;
+    bool braking;
 
     float steerInput;
 
@@ -162,6 +189,10 @@ public class Car : MonoBehaviour {
 	}
 
 	void Start() {
+
+        joystick = FindObjectOfType<Joystick>();
+        joyButton = FindObjectOfType<JoyButton>();
+
 		
 		AxleFront.Init (Rigidbody2D, WheelBase);
 		AxleRear.Init (Rigidbody2D, WheelBase);
@@ -177,40 +208,55 @@ public class Car : MonoBehaviour {
         if (IsPlayerControlled)
         {
 
-            // Handle Input
-            Throttle = 0;
-            Brake = 0;
-            EBrake = 0;
+            //Debug.Log("Horizontal " + joystick.Horizontal.ToString());
+            //Debug.Log("Vertical " + joystick.Vertical.ToString());
+
+            //Throttle = joystick.Vertical;
+            //steerInput = -joystick.Horizontal;
+
+
+            //// Handle Input
+            ////Throttle = 0;
+            ////Brake = 0;
+            ////EBrake = 0;
 
             //var mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             //Throttle = Input.mousePosition.y / Screen.height - 0.5f;
 
-            if (Input.GetKey(KeyCode.UpArrow))
-            {
-                Throttle = 0.5F;
-            }
-            else if (Input.GetKey(KeyCode.DownArrow))
-            {
-                //Brake = 1;
-                Throttle = -1;
-            }
-            if (Input.GetKey(KeyCode.Space))
-            {
-                EBrake = 1;
-            }
+            if (speedingUp) Throttle = 0.5f;
+            else if (braking) Throttle = -1;
+            else Throttle = 0;
 
-            steerInput = 0;
+
+            //if (Input.GetKey(KeyCode.UpArrow))
+            //{
+            //    Throttle = 0.5F;
+            //}
+            //else if (Input.GetKey(KeyCode.DownArrow))
+            //{
+            //    //Brake = 1;
+            //    Throttle = -1;
+            //}
+            //if (Input.GetKey(KeyCode.Space))
+            //{
+            //    EBrake = 1;
+            //}
+
+
+            if (turningLeft) steerInput = 1;
+            else if (turningRight) steerInput = -1;
+            else steerInput = 0;
 
             //steerInput = -(Input.mousePosition.x / Screen.width - 0.5f);
 
-            if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                steerInput = 1;
-            }
-            else if (Input.GetKey(KeyCode.RightArrow))
-            {
-                steerInput = -1;
-            }
+            //if (Input.GetKey(KeyCode.LeftArrow))
+            //{
+            //    steerInput = 1;
+            //}
+            //else if (Input.GetKey(KeyCode.RightArrow))
+            //{
+            //    steerInput = -1;
+            //}
 
             if (Input.GetKeyDown(KeyCode.A))
             {
@@ -225,14 +271,14 @@ public class Car : MonoBehaviour {
         {
             if (turnEnabled && time < turnDuration)
             {
-                Debug.Log("TURNING" + turnEnabled.ToString()+ " " + name + " " + time);
+                //Debug.Log("TURNING" + turnEnabled.ToString()+ " " + name + " " + time);
                 time += Time.fixedDeltaTime;
                 steerInput = turnDirection;
                 Throttle = 0.1f;
             }
             else
             {
-                Debug.Log("not TURNING" + turnEnabled.ToString() + " " + name + " " + time);
+                //Debug.Log("not TURNING" + turnEnabled.ToString() + " " + name + " " + time);
                 Throttle = 0.3f;
                 turnEnabled = false;
                 time = 0;
@@ -451,49 +497,65 @@ public class Car : MonoBehaviour {
 	void OnGUI (){
         if (IsPlayerControlled)
         {
-            GUI.Label(new Rect(5, 5, 300, 20), "Speed: " + SpeedKilometersPerHour.ToString());
-            GUI.Label(new Rect(5, 25, 300, 20), "RPM: " + Engine.GetRPM(Rigidbody2D).ToString());
-            GUI.Label(new Rect(5, 45, 300, 20), "Gear: " + (Engine.CurrentGear + 1).ToString());
-            GUI.Label(new Rect(5, 65, 300, 20), "LocalAcceleration: " + LocalAcceleration.ToString());
-            GUI.Label(new Rect(5, 85, 300, 20), "Acceleration: " + Acceleration.ToString());
-            GUI.Label(new Rect(5, 105, 300, 20), "LocalVelocity: " + LocalVelocity.ToString());
-            GUI.Label(new Rect(5, 125, 300, 20), "Velocity: " + Velocity.ToString());
-            GUI.Label(new Rect(5, 145, 300, 20), "SteerAngle: " + SteerAngle.ToString());
-            GUI.Label(new Rect(5, 165, 300, 20), "Throttle: " + Throttle.ToString());
-            GUI.Label(new Rect(5, 185, 300, 20), "Brake: " + Brake.ToString());
+            //GUI.Label(new Rect(5, 5, 300, 20), "Speed: " + SpeedKilometersPerHour.ToString());
+            //GUI.Label(new Rect(5, 25, 300, 20), "RPM: " + Engine.GetRPM(Rigidbody2D).ToString());
+            //GUI.Label(new Rect(5, 45, 300, 20), "Gear: " + (Engine.CurrentGear + 1).ToString());
+            //GUI.Label(new Rect(5, 65, 300, 20), "LocalAcceleration: " + LocalAcceleration.ToString());
+            //GUI.Label(new Rect(5, 85, 300, 20), "Acceleration: " + Acceleration.ToString());
+            //GUI.Label(new Rect(5, 105, 300, 20), "LocalVelocity: " + LocalVelocity.ToString());
+            //GUI.Label(new Rect(5, 125, 300, 20), "Velocity: " + Velocity.ToString());
+            //GUI.Label(new Rect(5, 145, 300, 20), "SteerAngle: " + SteerAngle.ToString());
+            //GUI.Label(new Rect(5, 165, 300, 20), "Throttle: " + Throttle.ToString());
+            //GUI.Label(new Rect(5, 185, 300, 20), "Brake: " + Brake.ToString());
 
-            GUI.Label(new Rect(5, 205, 300, 20), "HeadingAngle: " + HeadingAngle.ToString());
-            GUI.Label(new Rect(5, 225, 300, 20), "AngularVelocity: " + AngularVelocity.ToString());
+            //GUI.Label(new Rect(5, 205, 300, 20), "HeadingAngle: " + HeadingAngle.ToString());
+            //GUI.Label(new Rect(5, 225, 300, 20), "AngularVelocity: " + AngularVelocity.ToString());
 
-            GUI.Label(new Rect(5, 245, 300, 20), "TireFL Weight: " + AxleFront.TireLeft.ActiveWeight.ToString());
-            GUI.Label(new Rect(5, 265, 300, 20), "TireFR Weight: " + AxleFront.TireRight.ActiveWeight.ToString());
-            GUI.Label(new Rect(5, 285, 300, 20), "TireRL Weight: " + AxleRear.TireLeft.ActiveWeight.ToString());
-            GUI.Label(new Rect(5, 305, 300, 20), "TireRR Weight: " + AxleRear.TireRight.ActiveWeight.ToString());
+            //GUI.Label(new Rect(5, 245, 300, 20), "TireFL Weight: " + AxleFront.TireLeft.ActiveWeight.ToString());
+            //GUI.Label(new Rect(5, 265, 300, 20), "TireFR Weight: " + AxleFront.TireRight.ActiveWeight.ToString());
+            //GUI.Label(new Rect(5, 285, 300, 20), "TireRL Weight: " + AxleRear.TireLeft.ActiveWeight.ToString());
+            //GUI.Label(new Rect(5, 305, 300, 20), "TireRR Weight: " + AxleRear.TireRight.ActiveWeight.ToString());
 
-            GUI.Label(new Rect(5, 325, 300, 20), "TireFL Friction: " + AxleFront.TireLeft.FrictionForce.ToString());
-            GUI.Label(new Rect(5, 345, 300, 20), "TireFR Friction: " + AxleFront.TireRight.FrictionForce.ToString());
-            GUI.Label(new Rect(5, 365, 300, 20), "TireRL Friction: " + AxleRear.TireLeft.FrictionForce.ToString());
-            GUI.Label(new Rect(5, 385, 300, 20), "TireRR Friction: " + AxleRear.TireRight.FrictionForce.ToString());
+            //GUI.Label(new Rect(5, 325, 300, 20), "TireFL Friction: " + AxleFront.TireLeft.FrictionForce.ToString());
+            //GUI.Label(new Rect(5, 345, 300, 20), "TireFR Friction: " + AxleFront.TireRight.FrictionForce.ToString());
+            //GUI.Label(new Rect(5, 365, 300, 20), "TireRL Friction: " + AxleRear.TireLeft.FrictionForce.ToString());
+            //GUI.Label(new Rect(5, 385, 300, 20), "TireRR Friction: " + AxleRear.TireRight.FrictionForce.ToString());
 
-            GUI.Label(new Rect(5, 405, 300, 20), "TireFL Grip: " + AxleFront.TireLeft.Grip.ToString());
-            GUI.Label(new Rect(5, 425, 300, 20), "TireFR Grip: " + AxleFront.TireRight.Grip.ToString());
-            GUI.Label(new Rect(5, 445, 300, 20), "TireRL Grip: " + AxleRear.TireLeft.Grip.ToString());
-            GUI.Label(new Rect(5, 465, 300, 20), "TireRR Grip: " + AxleRear.TireRight.Grip.ToString());
+            //GUI.Label(new Rect(5, 405, 300, 20), "TireFL Grip: " + AxleFront.TireLeft.Grip.ToString());
+            //GUI.Label(new Rect(5, 425, 300, 20), "TireFR Grip: " + AxleFront.TireRight.Grip.ToString());
+            //GUI.Label(new Rect(5, 445, 300, 20), "TireRL Grip: " + AxleRear.TireLeft.Grip.ToString());
+            //GUI.Label(new Rect(5, 465, 300, 20), "TireRR Grip: " + AxleRear.TireRight.Grip.ToString());
 
-            GUI.Label(new Rect(5, 485, 300, 20), "AxleF SlipAngle: " + AxleFront.SlipAngle.ToString());
-            GUI.Label(new Rect(5, 505, 300, 20), "AxleR SlipAngle: " + AxleRear.SlipAngle.ToString());
+            //GUI.Label(new Rect(5, 485, 300, 20), "AxleF SlipAngle: " + AxleFront.SlipAngle.ToString());
+            //GUI.Label(new Rect(5, 505, 300, 20), "AxleR SlipAngle: " + AxleRear.SlipAngle.ToString());
 
-            GUI.Label(new Rect(5, 525, 300, 20), "AxleF Torque: " + AxleFront.Torque.ToString());
-            GUI.Label(new Rect(5, 545, 300, 20), "AxleR Torque: " + AxleRear.Torque.ToString());
+            //GUI.Label(new Rect(5, 525, 300, 20), "AxleF Torque: " + AxleFront.Torque.ToString());
+            //GUI.Label(new Rect(5, 545, 300, 20), "AxleR Torque: " + AxleRear.Torque.ToString());
         }
 	}
 
-    public void Turn(int direction, float duration)
+    public void Turn(int direction)
     {
         Debug.Log("Im trying to turn!");
         turnEnabled = true;
         turnDirection = direction;
-        turnDuration = duration;
     }
+
+
+    public void SteerLeft(){ turningLeft = true; }
+
+    public void SteerRight(){ turningRight = true; }
+
+    public void ThrottleEnable(){ speedingUp = true; }
+
+    public void BreakeEnable(){braking = true;}
+
+    public void SteerLeftDisable() { turningLeft = false; }
+
+    public void SteerRightDisable() { turningRight = false; }
+
+    public void ThrottleDisable() { speedingUp = false; }
+
+    public void BreakeDisable() { braking = false; }
 
 }

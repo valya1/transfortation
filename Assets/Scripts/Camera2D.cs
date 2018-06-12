@@ -11,7 +11,8 @@ public class Camera2D: MonoBehaviour
 
     public void Start()
     {
-        Camera.main.orthographicSize = 10f;
+        //Camera.main.projectionMatrix = Camera.main.projectionMatrix * Matrix4x4.Scale(new Vector3(1, -1, 1));
+        Camera.main.orthographicSize = 20f;
     }
 
 	public void Set()

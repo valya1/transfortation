@@ -25,7 +25,7 @@ public class IntersectionZoneTrigger : MonoBehaviour {
         else
         {
             var bot = other.gameObject.GetComponent<Car>();
-            bot.Turn(targetTurnDirection, turnDuration);
+            bot.Turn(targetTurnDirection);
         }
     }
 
